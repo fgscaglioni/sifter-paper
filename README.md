@@ -57,9 +57,8 @@ Menu → Main document = `main.tex`, compilador **LaTeX** (latexmk, o padrão). 
 main.tex               # preâmbulo, frontmatter (resumo, highlights), includes
 sections/              # um arquivo por seção
 references.bib         # AMA/NEJM via biblatex
-figures/               # imagens de \includegraphics (alvo do \graphicspath)
+figures/               # imagens de \includegraphics: CUP_Logo.pdf (da classe) e figuras do texto
 CUP-JNL-DTM.cls        # classe da CUP, cópia de trabalho (ver PROVENANCE.md)
-CUP_Logo.pdf           # logo que a classe insere na primeira página
 PROVENANCE.md          # origem e situação de licença do template
 data/                  # aponta para os artefatos de medição, não duplica
 notes/                 # decisão de veículo e próximos passos
