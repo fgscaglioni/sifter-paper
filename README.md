@@ -29,7 +29,7 @@ Toolchain verificada em 11/11/2026: TeX Live 2023, `pdflatex` + `biber`, classe 
 
 ## Como compilar no Overleaf
 
-Menu → Main document = `main.tex`, compilador **LaTeX** (latexmk, o padrão). `main.tex`, `sections/`, `references.bib`, `CUP-JNL-DTM.cls` e `CUP_Logo.pdf` estão todos na raiz do projeto, então o build não depende de `latexmkrc` nem de `TEXINPUTS` — mesma razão pela qual `pdflatex main.tex` roda direto na raiz de um clone.
+Menu → Main document = `main.tex`, compilador **LaTeX** (latexmk, o padrão). `main.tex`, `sections/` e `references.bib` estão na raiz, e `.template/` tem a classe e o logo, então o build não depende de `latexmkrc` nem de `TEXINPUTS` — mesma razão pela qual `pdflatex main.tex` roda direto na raiz de um clone.
 
 ## Regras da revista que já estão no código
 
@@ -58,8 +58,7 @@ main.tex               # preâmbulo, frontmatter (resumo, highlights), includes
 sections/              # um arquivo por seção
 references.bib         # AMA/NEJM via biblatex
 figures/               # imagens do texto (\includegraphics)
-.template/             # CUP_Logo.pdf, asset da classe (fora das figuras do artigo)
-CUP-JNL-DTM.cls        # classe da CUP, cópia de trabalho (ver PROVENANCE.md)
+.template/             # CUP-JNL-DTM.cls + CUP_Logo.pdf (ver PROVENANCE.md)
 PROVENANCE.md          # origem e situação de licença do template
 data/                  # aponta para os artefatos de medição, não duplica
 notes/                 # decisão de veículo e próximos passos
