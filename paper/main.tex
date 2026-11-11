@@ -1,0 +1,91 @@
+%% Sifter paper -- Research Synthesis Methods, article type Software Focus.
+%% Class: CUP-JNL-DTM with journal=rsm (biblatex, NEJM-ish numbered superscript).
+%% Build: make (pdflatex -> biber -> pdflatex x2)
+\documentclass[journal=rsm]{CUP-JNL-DTM}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage[T1]{fontenc}
+\usepackage[colorlinks,allcolors=blue]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+\usepackage{xcolor}
+
+\graphicspath{{figures/}}
+
+\jname{Research Synthesis Methods}
+\articletype{Software Focus}
+\jyear{2026}
+
+\addbibresource{references.bib}
+
+\begin{document}
+
+\begin{Frontmatter}
+
+\title[Sifter: LLM-assisted screening for systematic reviews]{Sifter: an open-source, provider-agnostic platform for large language model assisted screening in systematic reviews}
+
+\author[1]{Fabricio G. Scaglioni}
+%% TODO coautores: orientadores (Marilton Aguiar e Julius Leite, UFPel) e demais
+%% colaboradores entram aqui com \author[1]{} e a ordem acordada com eles.
+
+\authormark{Scaglioni}
+
+\address[1]{\orgdiv{Programa de P\'os-Gradua\c{c}\~ao em Computa\c{c}\~ao}, \orgname{Universidade Federal de Pelotas}, \orgaddress{\city{Pelotas}, \state{RS}, \country{Brazil}}. \email{fabricio.scaglioni@ufpel.edu.br}}
+
+\keywords{systematic reviews, screening, large language models, automation, reproducibility}
+
+\abstract{Title and abstract screening is the most labour-intensive step of a
+systematic review, and the step where automation has been slowest to become
+trustworthy. Sifter is an open-source platform that delegates screening to
+large language models (LLMs) while keeping the review protocol, the decision
+trail and the cost accounting under the reviewer's control. The platform is
+provider-agnostic, stores one structured decision per record (include,
+exclude or doubt) together with a short justification, and offers a blind
+validation mode in which the model decision is hidden until the human
+reviewer records their own, from which agreement statistics are computed
+automatically. In a pilot deployment across four review projects, 14{,}219 of
+14{,}353 records (99.1\%) received an LLM decision at an average of 833 tokens
+per record, which corresponds to US\$0.10 to US\$1.63 per 1{,}000 screened
+records depending on the provider tariff. On an educational corpus of 31
+blindly re-screened records, agreement with the human reviewer was substantial
+(Cohen's $\kappa$ 0.61, 95\% CI 0.29 to 0.90) with no missed inclusion
+(sensitivity 100\%, specificity 80\%). We describe the design decisions that
+make these numbers auditable, report the platform against current expectations
+for generative AI in evidence synthesis, and state precisely which workload
+metrics remain to be measured before the tool can be recommended for
+production use.}
+
+\end{Frontmatter}
+
+\section*{Highlights}
+
+\begin{itemize}
+\item Sifter is a web-based, open-source platform that lets a review team run
+title and abstract screening with large language models without giving up
+control of the protocol, the audit trail or the cost.
+\item Every automated decision is stored with the record, the model, the prompt
+version and the token counts, so a reviewer can reconstruct what happened to
+any single study months later.
+\item A blind validation mode hides the model decision until a human has
+screened the same record, which turns routine re-screening into a measurable
+agreement study instead of an unverifiable claim of accuracy.
+\item In a pilot deployment the marginal cost of screening was between US\$0.10
+and US\$1.63 per thousand records, small against the reviewer hours it
+displaces; the open question is not cost but the rate of missed inclusions,
+which the platform is designed to expose rather than hide.
+
+\end{itemize}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-system}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\begin{Backmatter}
+\printbibliography
+\end{Backmatter}
+
+\end{document}

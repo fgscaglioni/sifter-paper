@@ -1,0 +1,59 @@
+\section{Conclusion}\label{sec:conclusion}
+
+Sifter is an open-source platform for large language model assisted screening
+in systematic reviews, built around the proposition that an automated decision
+is only useful to evidence synthesis when it is auditable, attributable to a
+protocol and a model version, priced per record and measurable against a human
+reviewer. The pilot deployment reported here screened 14{,}219 records at 833
+tokens per record, at a monetary cost that is small against the reviewer time it
+displaces, and produced an agreement estimate of
+$\kappa = 0.61$ on the one corpus where the comparison was interpretable, with
+no missed inclusions in a sample of 31 records. Those numbers are a signal, not
+a validation: work saved over screening, number needed to read, reviewer time
+and external validation remain to be measured, and the platform is instrumented
+to measure them.
+
+The broader claim is methodological rather than technical. As language models
+become routine in screening, the scarce resource stops being inference and
+becomes the evidence that the screening was done as reported. A tool that
+records the model, the prompt, the protocol version, the cost and the human
+comparison for every record makes that evidence a by-product of the work rather
+than a separate publication.
+
+\section*{Acknowledgements}
+
+%% TODO: agradecimentos (bolsa, programa, revisores).
+
+\section*{Data and Code Availability Statement}
+
+%% TODO antes da submissao:
+%% - repositorio publico do codigo, com LICENSE OSI (hoje o repositorio nao tem licenca);
+%% - DOI do arquivo de dados (Zenodo ou OSF) com o corpus de medicao anonimizado;
+%% - versao do modelo, data de acesso e prompt versionado de cada projeto do piloto;
+%% - semente usada no sorteio da amostra cega de 300 pares.
+The platform source code is available at \url{https://github.com/fgscaglioni/sifter-ai}.
+The measurement corpus, the prompt versions and the seeded blind sample that
+support Tables~\ref{tab:corpus} to~\ref{tab:kappa} are archived at
+\emph{[repository DOI to be inserted before submission]}.
+Model identifiers, versions and access dates are recorded per decision in the
+archived dataset.
+
+\section*{Funding Statement}
+
+This research received no specific grant from any funding agency, commercial or
+not-for-profit sectors.
+
+\section*{Competing Interests}
+
+The author declares none.
+
+\section*{Author Contributions}
+
+F.G.S. conceptualised the platform, wrote the software, designed and ran the
+pilot, and wrote the manuscript.
+
+\section*{Use of Artificial Intelligence Tools}
+
+%% TODO: declarar aqui, conforme a politica da CUP, o uso de ferramentas de IA na
+%% redacao do manuscrito (geracao de texto, traducao, revisao de linguagem) e
+%% distinguir esse uso do objeto de estudo, que sao os LLMs usados pelo Sifter.

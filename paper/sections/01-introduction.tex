@@ -1,0 +1,71 @@
+\section{Introduction}\label{sec:intro}
+
+A systematic review begins with a search that returns thousands of records, and
+every one of them has to be judged against pre-specified eligibility criteria
+before a single study is read in full. This title and abstract screening stage
+is consistently reported as the most time-consuming part of the review
+process, and it is the stage where reviewer fatigue translates most directly
+into inconsistent decisions \autocite{Tsafnat_2014}. The methodological
+response has been to accept some degree of automation provided that the
+automation is itself evaluated: the question is no longer whether machine
+decisions may assist screening, but how their errors are measured and
+reported.
+
+Two families of tools have addressed the problem. Workflow systems such as
+Rayyan, Covidence, DistillerSR and EPPI-Reviewer organise the screening work
+but leave the judgement to the reviewer
+\autocite{Ouzzani_2016,Marshall_2019}. Machine learning systems such as
+ASReview, SWIFT-Review and the RCT classifiers derived from RobotSearch learn
+from a small set of labelled records and then rank the remaining ones, so that
+the reviewer reads the most promising records first
+\autocite{van_de_Schoot_2021,Howard_2016}. Both families are useful, and both
+have a structural limitation for the question this paper addresses: the
+workflow systems produce no machine decision to evaluate, and the supervised
+systems produce a ranking whose quality depends on the seed labels supplied by
+the reviewer, which makes the result difficult to transfer across reviews.
+
+Large language models change the shape of the problem. A general-purpose model
+can be given the review protocol in the prompt and return a decision with a
+short justification, without any task-specific training data. Early evidence
+is encouraging but uneven. Khraisha and colleagues found that GPT-4 could
+screen and extract data with performance that varied substantially by task and
+by field \autocite{Khraisha_2024}; Gartlehner and colleagues reported a
+similar pattern for data extraction \autocite{Gartlehner_2024}. At the same
+time, Callaghan and colleagues argued that computer-assisted screening tools
+are frequently released without the evaluation needed to justify their use in
+evidence synthesis \autocite{Callaghan_2024}, and the journal has since
+published explicit reporting expectations for manuscripts that evaluate
+generative AI in systematic reviews and meta-analyses
+\autocite{Farotimi_2025}.
+
+That combination, promising capability plus a weak evidence base, defines the
+gap this paper addresses. What a review team needs is not another model but an
+instrument: a system in which the model can be replaced, in which every
+automated decision is traceable to a record, a prompt and a model version, in
+which cost is accounted per record rather than per project, and in which the
+agreement between the model and a human reviewer can be measured on demand
+rather than asserted in a paper. The absence of that instrument is, in our
+reading, one reason why the literature on LLM screening is dominated by
+one-off evaluations on curated datasets and thin on deployments inside real
+reviews.
+
+This paper describes \textsc{Sifter}, an open-source platform built to be that
+instrument, and reports what a pilot deployment measured. The contribution is
+threefold. First, we describe the design decisions that make LLM screening
+auditable: a protocol object that is the single source for every prompt, a
+three-way decision space in which \emph{doubt} is a first-class outcome
+returned to the human reviewer, and a blind validation mode that hides the
+model decision until the reviewer has recorded their own. Second, we report
+the pilot evaluation: 14{,}219 records screened across four projects, the token
+and monetary cost per record, and an agreement study on an educational corpus.
+Third, we report the platform against the reporting expectations for
+generative AI in evidence synthesis \autocite{Farotimi_2025} and state
+explicitly which workload metrics, notably work saved over screening and
+number needed to read, have not yet been measured.
+
+The remainder of the paper is organised as follows.
+Section~\ref{sec:related} situates the platform among existing review software
+and screening automation. Section~\ref{sec:system} describes the architecture
+and the screening pipeline. Section~\ref{sec:evaluation} reports the pilot
+deployment. Section~\ref{sec:discussion} discusses what the numbers do and do
+not establish, and Section~\ref{sec:conclusion} concludes.

@@ -1,0 +1,190 @@
+\section{Pilot deployment}\label{sec:evaluation}
+
+\subsection{Setting and data}
+
+The numbers below come from the production database of a single installation
+used by the first author between April and June 2026. They are a
+\emph{deployment record}, not a controlled experiment: the projects were
+screened because they had to be screened, not because they were designed as an
+evaluation. We report them because they establish the order of magnitude of
+cost and scale, and because the journal's guidance asks for exactly this kind
+of operational evidence alongside the agreement study
+\autocite{Farotimi_2025}. The formal agreement study on a fresh blind sample is
+described in Section~\ref{sec:planned} and is not yet complete.
+
+Four projects are included. Three of them are screening runs over the same
+source of 4{,}670 records under different prompt configurations, which we
+label P1, P2 and P3; the fourth, P4, is an educational corpus of 343 records
+used to exercise the platform end to end.
+
+\subsection{Scale and decision distribution}
+
+Table~\ref{tab:corpus} summarises the corpus. Of 14{,}353 records, 14{,}219
+(99.1\%) carry a stored model decision. The 134 records without one are
+concentrated in P1, the earliest run, and correspond to records imported after
+the batch had been executed. The proportion of records classified as
+\emph{doubt} falls sharply across the three runs over the same source, from
+176 in P1 to 27 in P3, which is consistent with successive prompt revisions
+that pushed the model towards a binary decision.
+
+\begin{table}[htbp]
+\centering
+\caption{Records, model decisions and decision distribution per project}
+\label{tab:corpus}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+Project & Records & With AI & Included & Excluded & Doubt & Duplicates & Inclusion \\
+ & & decision & & & & & rate \\
+\midrule
+P1 & 4{,}670 & 4{,}573 (97.9\%) & 565 & 3{,}899 & 176 & 30 & 12.1\% \\
+P2 & 4{,}670 & 4{,}652 (99.6\%) & 913 & 3{,}660 & 79 & 18 & 19.6\% \\
+P3 & 4{,}670 & 4{,}651 (99.6\%) & 1{,}030 & 3{,}594 & 27 & 19 & 22.1\% \\
+P4 & 343 & 343 (100\%) & 11 & 332 & 0 & 0 & 3.2\% \\
+\midrule
+Total & 14{,}353 & 14{,}219 (99.1\%) & 2{,}519 & 11{,}485 & 282 & 67 & 17.6\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The inclusion rate is the number that matters for planning, and it varies by a
+factor of almost two across configurations of the same protocol (12.1\% in P1
+against 22.1\% in P3). A review team that estimates reviewer workload from a
+single automated run would therefore be wrong by a wide margin. This is an
+argument for treating the automated decisions as a first pass whose yield has
+to be measured per project, which is what the doubt mechanism and the blind
+mode are for.
+
+\subsection{Cost per record}
+
+Table~\ref{tab:cost} reports token consumption. The aggregate is 11.85 million
+tokens for 14{,}219 records, or 833 tokens per record, with a range from 427 to
+1{,}149 depending on prompt length and abstract length. The three tariff
+scenarios translate this into money; they span two orders of magnitude because
+provider prices differ by that much, and the platform records the model per
+decision so that the applicable tariff can be reconstructed later.
+
+\begin{table}[htbp]
+\centering
+\caption{Token consumption per project (top) and the resulting cost of the
+whole corpus under three provider tariffs (bottom). Tariffs are expressed in US
+dollars per million input and output tokens}
+\label{tab:cost}
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Project & Input tokens & Output tokens & Tokens per record \\
+\midrule
+P1 & 3{,}846{,}046 & 279{,}519 & 902 \\
+P2 & 5{,}032{,}476 & 313{,}751 & 1{,}149 \\
+P3 & 1{,}656{,}524 & 333{,}570 & 427 \\
+P4 & 367{,}003 & 21{,}739 & 1{,}133 \\
+\midrule
+Total & 10{,}902{,}049 & 948{,}579 & 833 \\
+\bottomrule
+\end{tabular}
+
+\vspace{2mm}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Tariff (input / output) & Cost of the corpus & US\$ per 1{,}000 records \\
+\midrule
+Low (0.10 / 0.40) & US\$1.47 & 0.10 \\
+Mid (0.30 / 2.50) & US\$5.64 & 0.40 \\
+High (1.25 / 10.00) & US\$23.11 & 1.63 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The order of magnitude is the finding: screening a 15{,}000-record review costs
+between one and twenty-five US dollars in model calls. The binding constraint
+on adoption is therefore not the price of inference but the reliability of the
+decisions, which is what the next subsection addresses.
+
+\subsection{Agreement with the human reviewer}
+
+Table~\ref{tab:kappa} reports every pair of records for which both an
+automated and a stored human decision existed at the time of measurement. We
+report all four projects, including the two whose agreement is close to
+chance, because suppressing them would reproduce the reporting practice the
+guidance warns against \autocite{Farotimi_2025}.
+
+\begin{table}[htbp]
+\centering
+\caption{Agreement between automated and stored human decisions, with the
+confusion matrix of the four projects (VN, true negative; FP, false positive;
+VP, true positive; FN, false negative)}
+\label{tab:kappa}
+\small
+\begin{tabular}{@{}lrrrrl@{}}
+\toprule
+Project & Pairs & $\kappa$ & 95\% CI & Raw agreement & Confusion matrix \\
+\midrule
+P1 & 4 & 0.000 & not computed ($n<5$) & 50.0\% & 2 VN, 2 FP, 0 VP, 0 FN \\
+P2 & 34 & 0.084 & 0.000 to 0.235 & 47.1\% & 14 VN, 18 FP, 2 VP, 0 FN \\
+P3 & 34 & 0.013 & $-0.290$ to 0.294 & 47.1\% & 6 VN, 14 FP, 10 VP, 4 FN \\
+P4 & 31 & 0.608 & 0.290 to 0.903 & 83.9\% & 20 VN, 5 FP, 6 VP, 0 FN \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three observations follow, and the third is the one we consider most important.
+
+First, only P4 supports an interpretation. With 31 pairs, $\kappa$ is 0.61
+(95\% CI 0.29 to 0.90), raw agreement 83.9\%, sensitivity 100\% (six of six
+included records recovered) and specificity 80\% (20 of 25 exclusions
+confirmed). The interval is wide enough that the point estimate should not be
+quoted as the accuracy of the tool; it is a signal, not a measurement.
+
+Second, the error pattern in P2 and P3 is asymmetric and consistent across both
+runs: over-inclusion, with 14 to 18 false positives against 0 to 4 false
+negatives. In screening, a false negative costs evidence and a false positive
+costs reviewer time. The configuration used in these runs is therefore
+recall-oriented, which is defensible for a first pass but has a direct
+consequence for workload: the reviewer still reads a substantial share of the
+records, and the workload reduction is smaller than the raw automation rate
+suggests.
+
+Third, the low agreement in P2 and P3 is not evidence that the model cannot
+screen. The stored human decisions in those projects were recorded during
+development, at dates that were not captured, and may have been made under an
+earlier version of the criteria. What the table demonstrates is a limitation of
+the measurement, not of the model, and it is precisely the limitation that the
+blind validation mode was built to remove: the platform now records who
+decided, when, and against which protocol version, which the pilot data do not
+carry for every pair.
+
+\subsection{Engineering quality}
+
+The platform's own test suite is reported because reproducibility of a
+research tool is part of its evaluation. At the time of the pilot the backend
+suite contained 260 tests, of which 259 passed and one was skipped, in 2
+minutes and 42 seconds, with 75.11\% line coverage. Throughput during batch
+execution produced a median interval between consecutive decision events of
+0.00 to 0.05 seconds per project, confirming that screening runs in a single
+batch rather than interactively; it is not a measure of reviewer time.
+
+\subsection{What has not been measured}\label{sec:planned}
+
+The guidance for generative AI submissions requires workload metrics for tools
+whose purpose is to reduce effort \autocite{Farotimi_2025}. Sifter has not yet
+produced them, and we state the gap rather than approximate it. Three
+quantities are outstanding.
+
+\begin{enumerate}
+\item \textbf{Work saved over screening (WSS)} and \textbf{number needed to
+read (NNR)}, computed on a blind sample of 300 pairs drawn from the
+educational corpus. The sample and the reference decisions have been generated
+and are stored; the reference screening has not been completed.
+\item \textbf{Reviewer time per record}, with and without the automated first
+pass, which requires a timed screening session and is the input for any
+statement about hours saved.
+\item \textbf{External validation} on a review protocol and record set produced
+by another team, which is the only way to test transfer across fields and
+prompt styles.
+\end{enumerate}
+
+Until these three exist, the claim this paper supports is bounded: the
+platform records what it does, at a cost that is negligible relative to
+reviewer time, and it makes the agreement study cheap enough to be run as
+routine quality control. It does not yet support a claim about accuracy in
+general.

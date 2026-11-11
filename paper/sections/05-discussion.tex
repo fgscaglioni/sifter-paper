@@ -1,0 +1,112 @@
+\section{Discussion}\label{sec:discussion}
+
+\subsection{What the pilot establishes}
+
+Three things, in decreasing order of confidence. The cost of screening a
+record with a general-purpose model is between US\$0.0001 and US\$0.0016 at
+current tariffs, which is small enough that the price of inference cannot be
+the reason a review team declines to automate the first pass. The platform can
+hold and audit a screening run of several thousand records with per-record
+provenance, which the pilot exercised four times. And the agreement between
+model and reviewer can be computed by the tool itself, which changes the
+economics of validation: an agreement study stops being a separate research
+project and becomes a button in the project dashboard.
+
+\subsection{Error asymmetry is the design problem, not accuracy}
+
+The pilot's most transferable observation is the shape of the errors, not their
+rate. Across the two runs that produced interpretable matrices, false positives
+outnumbered false negatives by roughly five to one. For a first-pass screen
+this is the correct direction to err in, and it is also the reason why
+reporting a single ``accuracy'' number for a screening tool is uninformative:
+the same model can be tuned to miss nothing and to save little, or to save a
+great deal and to miss studies. Sifter exposes the choice instead of concealing
+it, through the three-way decision space and through the doubt queue, which
+prioritises precisely the records on which the model declined to commit.
+
+Whether the recall-oriented configuration is the right default for evidence
+synthesis is an empirical question that this paper does not answer, and that
+the field has not answered either. What the platform contributes is the
+ability to state the configuration, measure its consequence and change it
+without rewriting the tool.
+
+\subsection{Provider independence as a methodological requirement}
+
+Model behaviour changes with versions, prompts and sampling temperature, and
+the guidance for generative AI submissions now requires the model version and
+access date to be recorded \autocite{Farotimi_2025}. A tool that hard-codes one
+provider cannot honour that requirement across a multi-year review, because
+the model it used in the first year may not exist in the second. Sifter
+therefore separates the protocol, the prompt template and the provider, and
+stores the triplet with each decision. This is an engineering decision with a
+methodological justification: it is what allows a review published in 2026 to
+be re-screened in 2029 with the same protocol and a different model, and the
+difference attributed to the model rather than to the protocol.
+
+\subsection{Reporting against the guidance}
+
+Table~\ref{tab:guidance} maps the journal's requirements for manuscripts
+evaluating generative AI \autocite{Farotimi_2025} to the sections of this
+paper. The last row is the honest one.
+
+\begin{table}[htbp]
+\centering
+\caption{Reporting requirements for generative AI evaluations and where each is
+addressed}
+\label{tab:guidance}
+\begin{tabular}{@{}p{0.34\textwidth}p{0.56\textwidth}@{}}
+\toprule
+Requirement & Where addressed \\
+\midrule
+Sampling and dataset characteristics &
+Section~\ref{sec:evaluation}, Table~\ref{tab:corpus}; the 300-pair blind sample
+is described in Section~\ref{sec:planned} \\
+Prompt development and testing &
+Section~\ref{sec:protocol}; prompts are versioned with the protocol \\
+Established performance metrics &
+Agreement, sensitivity and specificity in Table~\ref{tab:kappa}; WSS and NNR
+outstanding \\
+Benchmark against manual screening &
+Table~\ref{tab:kappa}, with the provenance limitation stated \\
+Quality assurance procedures &
+Blind validation mode, Section~\ref{sec:blind} \\
+Seeds and randomisation &
+Sample selection is seeded and stored with the validation study \\
+Computational environment and model versions &
+Section~\ref{sec:system} and the per-decision record; versions and access dates
+in the Data and Code Availability Statement \\
+External validation &
+Outstanding; Section~\ref{sec:planned} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Limitations}
+
+The pilot has four limitations that a reader should carry into any use of the
+numbers. It is a single installation used by a single reviewer, so
+between-reviewer variability is not represented. The stored human decisions
+were not made under a uniform protocol version and their timestamps were not
+captured for every pair, which is why only one project yields an interpretable
+$\kappa$. The evaluation covers title and abstract screening only; full-text
+screening, risk of bias and data extraction are outside the scope of this
+paper, although the platform has an extraction workspace. And the reference
+standard in the agreement study is one human reviewer, not consensus between
+two, which means the reported agreement is a lower bound on agreement with a
+methodologically correct reference.
+
+\subsection{Implications for practice}
+
+For a review team, the practical implication is a change in what has to be
+planned. The automated first pass does not remove the need for screening; it
+changes the object that has to be validated. Instead of asserting that a tool
+was used, the team can report how many records the tool screened, with which
+model and prompt, at what cost, and with what agreement against a blind human
+sample. Review protocols and PRISMA flow diagrams already have slots for part
+of this information; the rest would need a reporting convention, and the
+guidance cited above is a first step towards one.
+
+For tool builders, the implication is that the unit of contribution is not the
+prompt but the audit trail. A prompt that screens well on a benchmark and
+leaves no record of what it saw is not reusable in evidence synthesis, however
+good its numbers are.

@@ -1,0 +1,163 @@
+\section{The Sifter platform}\label{sec:system}
+
+\subsection{Design goals}
+
+Sifter was built for one recurring situation: a review team has a protocol, a
+record set of a few thousand items, and a limited number of reviewer hours.
+The platform is the result of four requirements that were treated as
+non-negotiable, summarised in Table~\ref{tab:goals}. Each of them rules out a
+design that would otherwise have been simpler.
+
+\begin{table}[htbp]
+\centering
+\caption{Design goals and the mechanism that implements each one in Sifter}
+\label{tab:goals}
+\begin{tabular}{@{}p{0.19\textwidth}p{0.37\textwidth}p{0.27\textwidth}@{}}
+\toprule
+Goal & Mechanism & Where it is visible \\
+\midrule
+Auditability &
+One decision row per record, carrying label, justification, model identifier,
+prompt version and token counts &
+Record detail view; CSV and JSON export \\
+Provider independence &
+A provider abstraction with one generic OpenAI-compatible adapter plus native
+adapters for Gemini, Anthropic and Vertex AI &
+Project settings; per-project model choice recorded with the decisions \\
+Human primacy &
+Three-way decision space in which \emph{doubt} is a first-class label, returned
+to the reviewer rather than forced into include or exclude &
+Queue filter; doubt tab \\
+Measured agreement &
+Blind validation mode that hides the model decision until the human decision is
+stored, then computes $\kappa$, its confidence interval and the confusion
+matrix &
+Validation dashboard of the project \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Architecture}
+
+Sifter is a three-tier web application. The backend is a FastAPI service with
+SQLAlchemy over PostgreSQL; the frontend is a SvelteKit single-page
+application; the whole system is distributed as a Docker Compose stack with
+four services (application programming interface, database, test database and
+frontend), which is also the installation path recommended to reviewers who
+want to run the tool locally. Review data are isolated per project: records,
+protocol, decisions and events are scoped to a project identifier, and the
+storage layer keeps the associated PDFs in a per-project directory.
+
+The architecture is deliberately unremarkable. The parts that matter for
+evidence synthesis are not the web framework but the objects the framework
+persists, and those are described next.
+
+\subsection{The protocol object}\label{sec:protocol}
+
+Every project owns a protocol that follows the PICOC structure (population,
+intervention, comparison, outcome, context) together with the eligibility
+criteria written as inclusion and exclusion rules, the research questions and
+the keyword list with synonyms. The protocol is not documentation stored next
+to the data: it is the single source from which every screening prompt is
+assembled. Changing an eligibility criterion therefore changes the prompt for
+every subsequent record, and the version of the protocol used for a given
+decision is recorded with that decision.
+
+This decision has a cost and a benefit that should be stated plainly. The cost
+is that the platform cannot screen records for which no protocol exists, which
+excludes exploratory use on an ad hoc list of papers. The benefit is that the
+question ``what exactly was the model asked?'' has a single, inspectable
+answer, which is the condition for reproducing the screening at all.
+
+\subsection{Screening pipeline}
+
+Figure~\ref{fig:pipeline} shows the path of a record through the system.
+Records enter through RIS or BibTeX import, are deduplicated on DOI and on
+normalised title, and are stored with their abstract. For each record the
+prompt builder assembles a message from the protocol, the eligibility
+criteria and the record text, and the provider adapter sends it to the model
+selected for the project. The model is required to return a structured object
+containing a label (include, exclude or doubt), a short justification and the
+criterion that drove the decision. Responses that do not validate against the
+schema are retried, and records that still fail are marked for manual
+screening rather than silently dropped.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  stage/.style={draw, rounded corners=2pt, align=center, font=\footnotesize,
+                minimum height=10mm, text width=40mm, fill=black!3},
+  side/.style={draw, dashed, rounded corners=2pt, align=center, font=\scriptsize,
+               minimum height=10mm, text width=34mm, fill=black!1},
+  arr/.style={-{Latex[length=2mm]}, semithick}
+]
+\node[stage] (s1) at (0,0) {Import and deduplication};
+\node[stage] (s2) at (0,-1.5) {Prompt assembly};
+\node[stage] (s3) at (0,-3.0) {LLM screening};
+\node[stage] (s4) at (0,-4.5) {Decision store\\ (include, exclude, doubt)};
+\node[stage] (s5) at (0,-6.0) {Human review of doubt and blind sample};
+\node[stage] (s6) at (0,-7.5) {Export: PRISMA counts, CSV, LaTeX};
+
+\node[side] (proto) at (5.6,-1.5) {Protocol\\ (PICOC, criteria, prompt version)};
+\node[side] (prov)  at (5.6,-3.0) {Provider adapters\\ Gemini, Anthropic,\\ OpenAI-compatible, Vertex AI};
+\node[side] (audit) at (5.6,-4.5) {Audit log and cost\\ accounting (tokens per record)};
+
+\draw[arr] (s1) -- (s2);
+\draw[arr] (s2) -- (s3);
+\draw[arr] (s3) -- (s4);
+\draw[arr] (s4) -- (s5);
+\draw[arr] (s5) -- (s6);
+\draw[arr, dashed] (proto) -- (s2);
+\draw[arr, dashed] (prov) -- (s3);
+\draw[arr, dashed] (s4) -- (audit);
+\end{tikzpicture}
+\caption{Path of a record through Sifter. Solid arrows are the screening
+pipeline; dashed arrows are the components that make the pipeline
+provider-independent and auditable.}
+\label{fig:pipeline}
+\end{figure}
+
+Two implementation details are worth recording because they change the
+interpretation of the results. First, screening is executed in batch: the
+platform submits records in parallel and stores one event per state
+transition, so the interval between consecutive events measures throughput,
+not the time a reviewer would spend reading. Second, the \emph{doubt} label is
+not an error state. It is the mechanism through which the model declines to
+decide, and the queue gives those records priority over the ones the model
+confidently excluded.
+
+\subsection{Blind validation mode}\label{sec:blind}
+
+The validation mode is the feature that distinguishes Sifter from a screening
+interface with an API key. When a validation study is opened for a project,
+the platform draws a random sample of records, hides the existing model
+decision for those records in the reviewer interface, and asks the reviewer to
+screen them without seeing the machine label. Only after the human decision is
+stored does the interface reveal both decisions and update the statistics:
+Cohen's $\kappa$ with a bootstrap confidence interval, raw agreement, the
+confusion matrix and the derived sensitivity and specificity, computed against
+the human decision as reference \autocite{Cohen_1960,Landis_1977}.
+
+The sample, the seed used to draw it and the resulting pairs are stored, so
+the study can be repeated on a different sample and compared with the earlier
+one. This is the practical answer to the reproducibility requirement of the
+journal's generative AI guidance \autocite{Farotimi_2025}: the agreement study
+is an object inside the system, not a table typed into a manuscript.
+
+\subsection{Export and reporting}
+
+The platform exports the record set with both decisions, the audit events and
+the counts needed for the PRISMA flow diagram: records identified, duplicates
+removed, records screened, records excluded at screening and records sought for
+retrieval \autocite{Page_2021}. The export includes the model identifier, the
+protocol version and the prompt version for each decision, which is what makes
+the screening stage auditable after publication.
+
+\subsection{Implementation and availability}
+
+Version 3.20.0 of the platform is written in Python and TypeScript and is
+distributed as a Docker Compose stack. The backend test suite contained 260
+tests at the time of the pilot, of which 259 passed and one was skipped, with
+75.11\% line coverage against a project gate of 33\%. Source code, licence and
+installation instructions are reported in the Data and Code Availability
+Statement.

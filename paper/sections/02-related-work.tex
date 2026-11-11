@@ -1,0 +1,51 @@
+\section{Related work}\label{sec:related}
+
+\subsection{Review workflow software}
+
+Rayyan, Covidence, DistillerSR and EPPI-Reviewer share a common design: they
+hold the record set, distribute records among reviewers, record include and
+exclude decisions, and resolve conflicts
+\autocite{Ouzzani_2016,Marshall_2019}. Their contribution is organisational,
+and it is substantial: duplicate removal, blind dual screening and conflict
+resolution are the mechanisms through which the method protects itself. None
+of them, however, produces an automated screening decision that can be
+compared with the human one. When a review reports the use of such a tool, the
+report describes the workflow, not the performance of an algorithm.
+
+\subsection{Machine learning and active learning}
+
+ASReview introduced an open, actively learned screening loop in which the
+reviewer labels records one at a time and the model reorders the remaining
+queue after each label \autocite{van_de_Schoot_2021}. SWIFT-Review combined
+text mining, clustering and classification in a workbench for scoping
+\autocite{Howard_2016}. These systems are evaluated with recall-oriented
+metrics, and their reported performance is best understood as the performance
+of a prioritisation policy conditioned on the seed labels: change the seeds
+and the curve changes. That property is not a defect, but it complicates
+transfer, because a review team cannot know in advance what the seed labels
+will buy them.
+
+\subsection{Large language models in screening and extraction}
+
+The recent literature moves the decision itself into the model. Khraisha and
+colleagues evaluated GPT-4 on screening and data extraction across a set of
+reviews and found performance that was usable in some tasks and unreliable in
+others \autocite{Khraisha_2024}. Gartlehner and colleagues reached a similar
+conclusion for extraction, with a proof-of-concept design
+\autocite{Gartlehner_2024}. Reviews of the wider automation landscape stress
+that the field lacks shared reporting standards for these evaluations and that
+many tools are published without them \autocite{Callaghan_2024}. The journal's
+guidance for manuscripts testing generative AI now specifies the minimum:
+documented prompts, established metrics, external validation, seeds, model
+versions and access dates, and public data and code \autocite{Farotimi_2025}.
+
+\subsection{What is missing}
+
+Three things, in our reading. First, a deployment description: most LLM
+screening studies run on a curated benchmark, not inside a review that a team
+actually needed to finish. Second, cost accounting at the record level, which
+is what determines whether a review of 15{,}000 records is feasible under a
+given budget. Third, an instrument that makes the agreement study repeatable:
+if computing $\kappa$ between model and reviewer requires a separate script and
+a separate dataset, it will be done once, for the paper, and never again. The
+platform described next is an attempt to make these three things ordinary.
