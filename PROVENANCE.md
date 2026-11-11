@@ -15,8 +15,9 @@ autoria "Cambridge University Press e Overleaf").
   arquivo. A única string Creative Commons no arquivo está dentro da macro
   `\copytext`, que carimba CC-BY no artigo publicado, não na classe.
 - **A cópia está aqui por conveniência de build**, não para redistribuição
-  pública. Se o repositório for aberto, remover esta pasta e usar o template do
-  Overleaf, que é o caminho que a revista recomenda.
+  pública. Se o repositório for aberto, remover `CUP-JNL-DTM.cls` e
+  `CUP_Logo.pdf` e usar o template do Overleaf, que é o caminho que a revista
+  recomenda.
 
 ## Por que usar mesmo assim
 

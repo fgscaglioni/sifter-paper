@@ -12,7 +12,7 @@
 *.fdb_latexmk
 
 # Build artifacts kept out of the repository
-paper/main.pdf
+main.pdf
 
 # Sistema
 .DS_Store

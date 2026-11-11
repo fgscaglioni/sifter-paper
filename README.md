@@ -21,7 +21,7 @@ Artigo do Sifter para a **Research Synthesis Methods** (Cambridge University Pre
 ## Como compilar
 
 ```bash
-make          # pdflatex + biber + 2x pdflatex, gera paper/main.pdf
+make          # pdflatex + biber + 2x pdflatex, gera main.pdf
 make clean    # remove auxiliares
 ```
 
@@ -29,20 +29,18 @@ Toolchain verificada em 11/11/2026: TeX Live 2023, `pdflatex` + `biber`, classe 
 
 ## Como compilar no Overleaf
 
-Documento principal: `paper/main.tex` (Menu → Main document). Compilador: **LaTeX** (latexmk, o padrão), nunca pdfLaTeX direto.
-
-O Overleaf compila a partir da raiz do projeto, não da pasta do documento principal. Quem resolve isso é o `latexmkrc` na raiz: ele põe `paper/`, `paper/sections/` e `paper/template/` no `TEXINPUTS`/`BIBINPUTS`, então `\documentclass{CUP-JNL-DTM}`, `\input{sections/...}`, `\includegraphics{CUP_Logo}` e `references.bib` são encontrados sem mexer em nenhum caminho do `.tex`. Com pdfLaTeX o `latexmkrc` é ignorado e o build volta a falhar em `File 'CUP-JNL-DTM.cls' not found`.
+Menu → Main document = `main.tex`, compilador **LaTeX** (latexmk, o padrão). `main.tex`, `sections/`, `references.bib`, `CUP-JNL-DTM.cls` e `CUP_Logo.pdf` estão todos na raiz do projeto, então o build não depende de `latexmkrc` nem de `TEXINPUTS` — mesma razão pela qual `pdflatex main.tex` roda direto na raiz de um clone.
 
 ## Regras da revista que já estão no código
 
 | Regra | Onde está |
 |---|---|
-| Resumo de até 250 palavras, sem citação | `paper/sections/00-frontmatter.tex` |
-| Seção **Highlights** obrigatória, entre resumo e texto | `paper/sections/00-frontmatter.tex` |
-| Referências em AMA (free format aceito na submissão) | `paper/references.bib` + biblatex NEJM |
-| Data Availability Statement | `paper/sections/07-declarations.tex` |
-| Declaração de uso de IA generativa | `paper/sections/07-declarations.tex` |
-| Revisão single anonymised (não precisa cegar o PDF) | `paper/main.tex` |
+| Resumo de até 250 palavras, sem citação | `main.tex`, bloco `Frontmatter` |
+| Seção **Highlights** obrigatória, entre resumo e texto | `main.tex`, `\section*{Highlights}` |
+| Referências em AMA (free format aceito na submissão) | `references.bib` + biblatex NEJM |
+| Data and Code Availability Statement | `sections/06-conclusion.tex` |
+| Declaração de uso de IA generativa | **falta no fonte** (o texto cita a exigência, não há bloco de declaração) |
+| Revisão single anonymised (não precisa cegar o PDF) | `main.tex` |
 
 ## Pendências que travam a submissão
 
@@ -56,11 +54,13 @@ O Overleaf compila a partir da raiz do projeto, não da pasta do documento princ
 ## Estrutura
 
 ```
-paper/
-  main.tex               # preâmbulo, frontmatter, includes
-  sections/              # um arquivo por seção
-  references.bib         # AMA/NEJM via biblatex
-  template/              # classe CUP-JNL-DTM (cópia de trabalho, ver PROVENANCE.md)
-data/                    # aponta para os artefatos de medição, não duplica
-notes/                   # decisão de veículo e próximos passos
+main.tex               # preâmbulo, frontmatter (resumo, highlights), includes
+sections/              # um arquivo por seção
+references.bib         # AMA/NEJM via biblatex
+figures/               # imagens de \includegraphics (alvo do \graphicspath)
+CUP-JNL-DTM.cls        # classe da CUP, cópia de trabalho (ver PROVENANCE.md)
+CUP_Logo.pdf           # logo que a classe insere na primeira página
+PROVENANCE.md          # origem e situação de licença do template
+data/                  # aponta para os artefatos de medição, não duplica
+notes/                 # decisão de veículo e próximos passos
 ```
