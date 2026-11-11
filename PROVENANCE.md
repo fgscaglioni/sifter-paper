@@ -1,6 +1,6 @@
 # Proveniência da classe `CUP-JNL-DTM.cls`
 
-Arquivos: `CUP-JNL-DTM.cls` na raiz e `figures/CUP_Logo.pdf`, cópia de
+Arquivos: `CUP-JNL-DTM.cls` na raiz e `.template/CUP_Logo.pdf`, cópia de
 trabalho.
 Baixados em 11/11/2026 de `https://latextemplates.com/downloads/cup-data-article.zip`,
 que redistribui o "CUP Data Template" da galeria do Overleaf
@@ -17,7 +17,7 @@ autoria "Cambridge University Press e Overleaf").
   `\copytext`, que carimba CC-BY no artigo publicado, não na classe.
 - **A cópia está aqui por conveniência de build**, não para redistribuição
   pública. Se o repositório for aberto, remover `CUP-JNL-DTM.cls` e
-  `figures/CUP_Logo.pdf` e usar o template do Overleaf, que é o caminho que a revista
+  `.template/CUP_Logo.pdf` e usar o template do Overleaf, que é o caminho que a revista
   recomenda.
 
 ## Por que usar mesmo assim
