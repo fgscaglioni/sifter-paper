@@ -27,6 +27,12 @@ make clean    # remove auxiliares
 
 Toolchain verificada em 11/11/2026: TeX Live 2023, `pdflatex` + `biber`, classe `CUP-JNL-DTM` com `journal=rsm` (biblatex estilo NEJM, citação numérica sobrescrita). O template vazio compila em 3 páginas.
 
+## Como compilar no Overleaf
+
+Documento principal: `paper/main.tex` (Menu → Main document). Compilador: **LaTeX** (latexmk, o padrão), nunca pdfLaTeX direto.
+
+O Overleaf compila a partir da raiz do projeto, não da pasta do documento principal. Quem resolve isso é o `latexmkrc` na raiz: ele põe `paper/`, `paper/sections/` e `paper/template/` no `TEXINPUTS`/`BIBINPUTS`, então `\documentclass{CUP-JNL-DTM}`, `\input{sections/...}`, `\includegraphics{CUP_Logo}` e `references.bib` são encontrados sem mexer em nenhum caminho do `.tex`. Com pdfLaTeX o `latexmkrc` é ignorado e o build volta a falhar em `File 'CUP-JNL-DTM.cls' not found`.
+
 ## Regras da revista que já estão no código
 
 | Regra | Onde está |
