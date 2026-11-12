@@ -16,7 +16,7 @@ Artigo do Sifter para a **Research Synthesis Methods** (Cambridge University Pre
 
 - Estrato: **A1** no ciclo 2025-2028 da Área 02 (percentil 97, estimativa do QualisComp lida em 11/11/2026).
 - Levantamento de veículos e requisitos: `01-Projects/SifterAI/SifterAI - Mapa de periodicos para o artigo (2026-11-11).md` no vault.
-- Código da ferramenta: `../sifter-ai` (v3.20.0, commit `93731e1`).
+- Código da ferramenta: `../sifter-ai` (v3.21.1, commit `75fde9f`).
 
 ## Como compilar
 

@@ -144,6 +144,72 @@ one. This is the practical answer to the reproducibility requirement of the
 journal's generative AI guidance \autocite{Farotimi_2025}: the agreement study
 is an object inside the system, not a table typed into a manuscript.
 
+\subsection{Critical appraisal with a weighted rubric}\label{sec:quality}
+
+Screening decides what enters the corpus; it does not say how much each study
+is worth. Sifter therefore has a second judgement stage, applied only to
+included records, in which the reviewer scores each study against a quality
+instrument defined in the protocol, following the practice of structured
+appraisal tools for observational and experimental designs
+\autocite{NOS_2000,CASP_2023}.
+
+The instrument has two parts. The first is a list of criteria, each with a
+weight. The second is a single answer scale shared by all criteria, whose
+levels carry the degree of compliance (for example 4 for \emph{meets}, 3 for
+\emph{partially meets}, down to 0 for \emph{fails}). Sharing one scale and
+weighting the criteria, instead of writing a bespoke scale per criterion, keeps
+the vocabulary stable across instruments and lets a criterion be promoted or
+demoted without rewriting the instrument.
+
+The score of a record is the weighted mean of the degrees of compliance, put
+back on the scale of the instrument:
+
+\begin{equation}
+S = n \cdot \frac{\sum_{q=1}^{n} w_q\, s_q}{\sum_{q=1}^{n} w_q},
+\qquad
+S_{\max} = n \cdot \max_j v_j,
+\label{eq:quality}
+\end{equation}
+
+where $n$ is the number of criteria, $w_q$ the weight of criterion $q$, $s_q$
+the value of the answer recorded for it and $v_j$ the values of the answer
+scale. The ceiling depends on the instrument the reviewer declared (two
+criteria on a 0 to 4 scale give a maximum of 8) and not on the weights, which
+only redistribute the requirement: with weights 2 and 1 the first criterion
+accounts for two thirds of the score. The distinction matters because it keeps
+the ceiling interpretable when a criterion is promoted; if weights inflated
+the ceiling, one edit would change the meaning of every score already
+recorded.
+
+A study becomes eligible for extraction when $S$ reaches an acceptance cutoff.
+The cutoff is stored in points, because other modules compare it with the score
+in SQL, but its invariant is the percentage of the ceiling: when the ceiling
+changes, the stored cutoff is recomputed to preserve the percentage the
+reviewer chose, rather than the number of points.
+
+\subsection{Changing an instrument with provenance}\label{sec:repricing}
+
+Review protocols change, and a platform that forces the team to duplicate a
+project to adjust a weight pushes the change outside the audit trail. Sifter
+therefore allows the instrument to be edited after the first assessment, but
+only as an operation with provenance. Once a vote exists the rubric is locked,
+and saving a change requires an explicit confirmation that first shows the
+effect: how many records are approved before and after, how many cross the
+cutoff, and how many would drop to zero because an answer no longer exists in
+the scale. On confirmation the server recomputes every derived score of the
+project in one transaction, stores the previous instrument and the summary of
+the impact in the project log, and exposes an undo that restores both. Each new
+assessment stores the hash of the instrument it was produced under, so a score
+can be traced to the version of the rubric that generated it, and the generated
+report prints that version next to a note on any repricing.
+
+Weights are the reviewer's methodological decision and are deliberately kept
+out of the model prompt: the LLM can propose a score per criterion from the
+criterion text, but never sees the weights, so that an important criterion is
+not judged more leniently and a secondary one more severely. Criteria are free
+text in the language of the project, so the same installation can host
+instruments written in different languages.
+
 \subsection{Export and reporting}
 
 The platform exports the record set with both decisions, the audit events and
@@ -155,9 +221,9 @@ the screening stage auditable after publication.
 
 \subsection{Implementation and availability}
 
-Version 3.20.0 of the platform is written in Python and TypeScript and is
-distributed as a Docker Compose stack. The backend test suite contained 260
-tests at the time of the pilot, of which 259 passed and one was skipped, with
-75.11\% line coverage against a project gate of 33\%. Source code, licence and
-installation instructions are reported in the Data and Code Availability
-Statement.
+Version 3.21.1 of the platform is written in Python and TypeScript and is
+distributed as a Docker Compose stack. At the time of this revision the backend
+suite contained 770 tests, of which 767 passed and three were skipped, with
+81.27\% line coverage against a project gate of 33\%, and the frontend suite
+contained 227 component tests. Source code, licence and installation
+instructions are reported in the Data and Code Availability Statement.
