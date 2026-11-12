@@ -103,7 +103,7 @@ docker exec sifter-ai-api-1 pytest -q | tail -25
 **Pronto quando:** os dois números estão no README do artigo.
 
 #### T0.6 Criar o checklist de submissão
-**Dono:** filho · **Arquivo:** `repos/sifter-paper/paper/CHECKLIST-SUBMISSAO.md`
+**Dono:** filho · **Arquivo:** `repos/sifter-paper/CHECKLIST-SUBMISSAO.md`
 Lista de caixas derivada da tabela de requisitos da RSM: resumo ≤250, Highlights, DAS com DOI, licença OSI, código público, ORCID, CRediT, declaração de IA, carta de apresentação, waiver.
 **Verificação:** o arquivo existe e cada item aponta para a seção do manuscrito que o cumpre.
 
@@ -122,17 +122,17 @@ Lista de caixas derivada da tabela de requisitos da RSM: resumo ≤250, Highligh
 
 #### T1.2 Persistir proveniência por decisão
 **Dono:** filho · **Depende de:** nada · **Bloqueia:** T1.3, T2.5, T5.1
+**Schema medido em 11/11/2026:** a proveniência mora em `vote`, não em `decision`. `vote` já tem `stage`, `purpose`, `decision`, `prompt_version`, `tokens_in`, `tokens_out`, `latency_ms`, `params_json`, `round_id` e `revealed_at` (16.292 linhas em 6 projetos). O que falta é `provider`, `model_id`, `model_version` e `accessed_at`, e as linhas antigas têm `prompt_version='legado'` com `params_json` vazio.
 **Arquivos:**
-- Modificar: `repos/sifter-ai/backend/src/core/models.py` (classe `Decision`)
-- Criar: `repos/sifter-ai/backend/migrations/versions/<prefixo>_proveniencia_de_decisao.py`
-- Teste: `repos/sifter-ai/backend/tests/test_decision_provenance.py`
-1. Escrever teste que cria uma decisão com `model_id`, `prompt_version` e `accessed_at` e relê do banco.
-2. Rodar e ver falhar: `docker exec sifter-ai-api-1 pytest -q --no-cov tests/test_decision_provenance.py` → erro de atributo.
-3. Acrescentar à classe: `provider: str | None`, `model_id: str | None`, `model_version: str | None`, `prompt_version: str | None`, `accessed_at: datetime | None`.
-4. Migração Alembic com as cinco colunas, nullable, sem default inventado.
-5. `docker exec sifter-ai-api-1 alembic upgrade head` e rodar o teste de novo.
+- Modificar: `repos/sifter-ai/backend/src/core/models.py` (classe `Vote`, não `Decision`)
+- Criar: `repos/sifter-ai/backend/migrations/versions/<prefixo>_proveniencia_de_voto.py`
+- Teste: `repos/sifter-ai/backend/tests/test_vote_provenance.py`
+1. Escrever teste que grava um voto com `provider`, `model_id`, `model_version` e `accessed_at` e relê do banco.
+2. Rodar e ver falhar: `docker exec sifter-ai-api-1 pytest -q --no-cov tests/test_vote_provenance.py` → erro de atributo.
+3. Acrescentar as quatro colunas, nullable, sem default inventado.
+4. Migração Alembic e `docker exec sifter-ai-api-1 alembic upgrade head`.
 **Esperado:** 1 passed no arquivo novo; `BASELINE_PYTEST + 1` na suíte completa.
-**Regra:** coluna nova nullable porque as 14.219 decisões antigas não têm o dado e não serão reescritas com valor falso.
+**Regra:** coluna nova nullable porque as decisões antigas não têm o dado e não serão reescritas com valor falso. O texto do artigo que promete "modelo por decisão" depende desta tarefa.
 
 #### T1.3 Export de auditoria com proveniência
 **Dono:** filho · **Depende de:** T1.2
@@ -157,32 +157,46 @@ Lista de caixas derivada da tabela de requisitos da RSM: resumo ≤250, Highligh
 2. Citar o arquivo que guarda o texto de cada versão no código.
 **Por quê:** o guia exige "como o prompt foi desenvolvido e testado", e a Tabela 2 mostra três configurações diferentes sobre o mesmo corpus. Sem esse histórico, a variação de 12,1% para 22,1% na taxa de inclusão fica sem explicação.
 
-#### T1.6 Congelar e documentar a semente do sorteio
-**Dono:** filho · **Depende de:** nada
+#### T1.7 Consertar os scripts de medição para o schema atual ✅ feito 11/11/2026
+**Dono:** filho · **Depende de:** nada · **Bloqueia:** T1.6, T2.1, T2.3
+**Defeito medido em 11/11/2026:** `gerar_amostra_cega.py`, `coletar_metricas.py` e `calcular_kappa.py` leem a coluna `article.ia_decision`, que **não existe mais**. O banco atual guarda o rótulo em `article.status` (`included`, `excluded`, `doubt`, `duplicate`) e a justificativa em `article.ia_criteria` e `article.ia_reasoning`. Rodar o gerador hoje falha com `column "ia_decision" does not exist`.
+**Arquivos:**
+- Modificar: `01-Projects/SifterAI/artigo/medicoes/gerar_amostra_cega.py` (trocar `ia_decision` por `status`, com o mapa `included`/`excluded`/`doubt`)
+- Modificar: `01-Projects/SifterAI/artigo/medicoes/coletar_metricas.py` (idem, e passar a ler `ia_provider`)
+- Modificar: `01-Projects/SifterAI/artigo/medicoes/calcular_kappa.py` (aceitar `doubt` como terceiro rótulo, ver T2.3)
+**Verificação:** `docker exec sifter-ai-db-1 psql -U sifter -d sifterdb -c "SELECT status, count(*) FROM article WHERE project_id=45 GROUP BY 1"` devolve `included 1030`, `excluded 3594`, `doubt 27`, `duplicate 19`; e o gerador roda sem erro produzindo 300 linhas.
+**Por quê:** sem isso toda a Sprint 2 falha no primeiro comando, e o defeito aparece como "coluna inexistente", não como erro de desenho.
+
+#### T1.6 Fixar e documentar o sorteio da amostra ✅ feito 11/11/2026
+**Dono:** filho · **Depende de:** T1.7
 **Arquivos:** `repos/sifter-paper/data/README.md`, `repos/sifter-paper/data/seed.txt`
-Ao gerar a amostra em T2.1, gravar a semente usada em `seed.txt` e citá-la no artigo.
-**Verificação:** `sha256sum data/seed.txt` registrado no README.
+**Estado real do gerador:** `gerar_amostra_cega.py` faz **amostragem sistemática por `id`** (passo = tamanho do estrato dividido por n, começando no índice 0), não sorteio com semente. A docstring fala em "semente fixa", mas não existe semente no código.
+**Risco:** `id` acompanha a ordem de importação, que acompanha a base de origem; amostra sistemática sobre ordem de importação herda o padrão da fonte.
+**Decisão:** trocar por sorteio com semente derivada de hash (`md5(id + seed)`), gravar a semente em `data/seed.txt` e citá-la no artigo.
+**Verificação:** rodar duas vezes com a mesma semente e obter `sha256sum` idêntico do CSV; rodar com semente diferente e obter outro conjunto.
 
 ---
 
 ### Sprint 2 — E1, o estudo que destrava o artigo (2 semanas)
 
-#### T2.1 Regerar a amostra cega com semente explícita
-**Dono:** filho · **Depende de:** T1.2 (para o export casar)
-**Armadilha do script:** ele nomeia a saída pelo **número de linhas**, não pelo prefixo. Rodar com `--prefixo amostra-cega-2026-11` grava `amostra-cega-2026-11-300.csv` e `gabarito-300.csv` no diretório atual, e o segundo **sobrescreve** o gabarito antigo. Por isso a amostra nova nasce em subdiretório próprio.
+#### T2.1 Regerar a amostra cega ✅ feito 11/11/2026
+**Dono:** filho · **Depende de:** T1.2, T1.6, T1.7
+**Universo medido em 11/11/2026 (projeto 45):** 4.670 registros, dos quais 19 duplicados e 15 sem título ou resumo. Frame de triagem = **4.636**: 1.030 `included`, 3.580 `excluded`, 26 `doubt`.
+**Armadilha do script:** a saída é nomeada pelo **total de linhas**, não pela semente. Rodar de novo no mesmo diretório sobrescreve `revisor-326.csv` e `gabarito-326.csv` da rodada anterior. Cada ciclo nasce em subdiretório próprio (`e1-<ciclo>/`).
 ```bash
 cd 01-Projects/SifterAI/artigo/medicoes
 mkdir -p e1-2026-11 && cd e1-2026-11
-python3 ../gerar_amostra_cega.py --project 45 --n 300 --prefixo amostra
+python3 ../gerar_amostra_cega.py --project 45 --n 300 --prefixo amostra --seed 20261111
 ```
-**Esperado:** `amostra-300.csv` (300 linhas, sem coluna de IA) e `gabarito-300.csv` (300 linhas `id;ia_decision`), com 100 incluídos e 200 excluídos.
-**Verificação:** `awk -F';' 'NR>1{print $2}' gabarito-300.csv | sort | uniq -c` e `wc -l *.csv`.
+**Esperado:** `revisor-326.csv` (326 linhas com `manual_decision` vazia) e `gabarito-326.csv` (326 linhas com `id;status;estrato;n_estrato;n_amostra;peso`), com 100 `included`, 200 `excluded` e 26 `doubt`. Gerado e conferido em 11/11/2026.
+**Falta o estrato `doubt`:** o gerador só sorteia `included` e `excluded`. As 26 dúvidas não entram na amostra, mas são lidas pelo revisor de qualquer forma e precisam de rótulo humano. Acrescentar as 26 ao arquivo do revisor antes de triar (total 326 decisões).
+**Verificação:** `awk -F';' 'NR>1{print $2}' gabarito-326.csv | sort | uniq -c` e `wc -l *.csv`.
 **Nota:** a amostra antiga da raiz de `medicoes/` fica intocada como histórico.
 
-#### T2.2 Triagem cega dos 300 registros, cronometrada
+#### T2.2 Triagem cega dos 326 registros, cronometrada
 **Dono:** Fabrício · **Depende de:** T2.1 · **Bloqueia:** T2.3
-**Como:** preencher a coluna `manual_decision` em `e1-2026-11/amostra-300.csv` sem abrir o `gabarito-300.csv`, em 2 a 3 sessões. Marcar hora de início e fim de cada sessão e pausas.
-**Estimativa:** 1 a 2 min por registro, 5 a 10 h no total.
+**Como:** preencher a coluna `manual_decision` em `e1-2026-11/revisor-326.csv` sem abrir o `gabarito-326.csv`, em 2 a 3 sessões. Marcar hora de início e fim de cada sessão e pausas. As 26 dúvidas entram na mesma sessão, às cegas.
+**Estimativa:** 1 a 2 min por registro, 5 a 11 h no total.
 **Arquivo de tempo:** `data/tempo-sessoes.csv` com `sessao,inicio,fim,pausas_min,registros`.
 **Por que cronometrado:** é o mesmo dado que alimenta o E2 (D2). Duas deficiências, uma sessão de trabalho.
 
@@ -190,16 +204,32 @@ python3 ../gerar_amostra_cega.py --project 45 --n 300 --prefixo amostra
 **Dono:** filho · **Depende de:** T2.2
 ```bash
 cd /home/fabricio/vault/01-Projects/SifterAI/artigo/medicoes/e1-2026-11
-python3 ../calcular_kappa.py --revisor amostra-300.csv --gabarito gabarito-300.csv --saida relatorio-e1.md
+python3 ../calcular_kappa.py --revisor revisor-326.csv --gabarito gabarito-326.csv --manifesto manifesto.json --saida relatorio-e1.md
 python3 ../analisar_e2_e4.py --tempo /home/fabricio/vault/repos/sifter-paper/data/tempo-sessoes.csv
 ```
-**Esperado:** relatório com κ, IC bootstrap, matriz 2x2, sensibilidade e especificidade; o valor **não tem meta**, é registrado como sair.
-**WSS:** calcular como proporção de registros que a IA excluiu e que o humano também excluiria, sobre o total que o humano precisaria ler sem automação. Fórmula escrita no relatório antes de rodar.
-**NNR:** registros lidos para cada incluído = (excluídos que sobraram após a primeira passada + incluídos) / incluídos.
+
+**Dados de entrada, um registro por linha:** `id`; rótulo da ferramenta (`included`/`excluded`/`doubt`); decisão humana (`Incluir`/`Excluir`); estrato de amostragem; `N_h` (tamanho do estrato no frame). Do conjunto: `N` do frame (4.636), contagem de dúvidas (26) e o recall alvo `R` (0,95).
+
+**Matriz contra o padrão humano**, contando `doubt` como registro lido:
+`TP` = verdadeiros incluídos entre os sinalizados (included + doubt); `FP` = verdadeiros excluídos entre os sinalizados; `FN` = incluídos que a ferramenta excluiu; `TN` = excluídos que ela excluiu.
+
+**Sensibilidade e precisão:** `R = TP/(TP+FN)` · `P = TP/(TP+FP)` · IC de Wilson para as duas.
+
+**NNR** (registros lidos por estudo incluído): `NNR = 1/P = (TP+FP)/TP`. Comparar com `NNR_manual = N/(TP+FN)`, que é o que se lê sem automação. Se `TP = 0`, NNR é indefinido: reportar como tal, não como zero.
+
+**WSS@R** (Cohen 2006): `WSS@R = (TN+FN)/N − (1−R)`. Em `R = 0,95`: fração não sinalizada menos 0,05. WSS negativo significa que a ferramenta poupa menos do que o próprio alvo de recall já custaria.
+
+**Peso da amostragem estratificada, o erro que invalida tudo se ignorado.** A amostra é 100 de 1.030 e 200 de 3.580, ou seja 9,7% e 5,6%. Calcular a matriz direto sobre as 300 linhas super-representa os incluídos em 1,5 vez (33,3% na amostra contra 22,2% no frame), o que infla a precisão e **subestima o trabalho humano**. Estimar por estrato e expandir:
+- `p̂_inc` = proporção de humanos que incluem entre os 100 sorteados de `included`
+- `p̂_exc` = idem entre os 200 sorteados de `excluded`
+- `TP̂ = 1030·p̂_inc` · `FP̂ = 1030·(1−p̂_inc) + 26·q̂` · `FN̂ = 3580·p̂_exc` · `TN̂ = 3580·(1−p̂_exc)`
+onde `q̂` é a fração das 26 dúvidas que o humano exclui. IC por bootstrap dentro de cada estrato, 2.000 reamostragens.
+
+**Se o alvo é WSS@95 e o recall observado for menor que 95%:** não existe WSS@95 calculado; reportar "WSS no recall observado de X%" e dizer que a configuração não atinge o alvo. Varrer limiar exigiria um score por registro, que o Sifter não grava hoje (só o rótulo e a justificativa).
 
 #### T2.4 Atualizar a Tabela 4 e criar a tabela de WSS e NNR
 **Dono:** filho · **Depende de:** T2.3
-**Arquivos:** `repos/sifter-paper/paper/sections/04-evaluation.tex`
+**Arquivos:** `repos/sifter-paper/sections/04-evaluation.tex`
 1. Substituir a linha P4 da Tabela 4 pelos números do E1 novo, mantendo os três projetos antigos como piloto.
 2. Criar a tabela de WSS e NNR logo depois da Tabela 4 (a numeração desloca a tabela de conformidade do guia para 6; as referências cruzadas são por `\ref`, então nada quebra à mão).
 3. Reescrever a Seção 4.6 ("What has not been measured") para o que ainda faltar de fato.
@@ -207,7 +237,7 @@ python3 ../analisar_e2_e4.py --tempo /home/fabricio/vault/repos/sifter-paper/dat
 
 #### T2.5 Reportar o protocolo do estudo dentro do artigo
 **Dono:** filho · **Depende de:** T2.3
-**Arquivo:** `paper/sections/04-evaluation.tex`, subseção "Blind agreement study"
+**Arquivo:** `sections/04-evaluation.tex`, subseção "Blind agreement study"
 Conteúdo obrigatório: de onde veio o corpus, como a amostra foi sorteada (1/3 incluídos, semente), quem triou, se houve cegamento, qual foi o padrão de referência, e a limitação de ser um revisor só.
 **Por quê:** é o item que o parecerista usa para julgar se o estudo é replicável.
 
@@ -232,6 +262,17 @@ Conteúdo obrigatório: de onde veio o corpus, como a amostra foi sorteada (1/3 
 2. Rodar com 100 sementes (as mesmas 100 inclusões da amostra) e registrar a curva de recall.
 **Esperado:** recall a 50% e a 100% do corpus lido, para comparação qualitativa.
 **Custo:** 2 a 4 h de máquina. **Se não rodar:** o artigo diz que o baseline é ASReview e cita o desempenho publicado, sem comparação própria, e isso entra como limitação.
+
+#### T3.4 Escrever a comparação com as ferramentas existentes
+**Dono:** filho · **Depende de:** nada (a matriz já está levantada) · **Arquivo de origem:** `notes/comparativo-e-metricas.md`
+**Arquivos:**
+- Modificar: `sections/02-related-work.tex` (nova subseção "Comparison with existing tools")
+- Modificar: `sections/04-evaluation.tex` (tabela de veredito por métrica)
+1. Reduzir a matriz de 17 linhas para 8 linhas por 5 colunas, mantendo a legenda de evidência (✅ código, 🟡 fornecedor declara, ✗ ausente, 🔒 não verificado).
+2. Escrever um parágrafo que diga o que o Sifter tem e os outros não (validação cega embutida, modelo como parâmetro auditável) e o que falta nele (instrumento de risco de viés, execução de busca, meta-análise, app móvel), com a consequência para o usuário em cada caso.
+3. Não afirmar superioridade em recurso; afirmar superioridade no eixo de auditabilidade, que é o que o artigo demonstra.
+4. Acrescentar a tabela de seis métricas com faixa ruim/aceitável/bom/excelente, marcando o que é âncora de literatura e o que é convenção do projeto.
+**Verificação:** `make` com 0 overfull; nenhuma célula 🟡 escrita como fato consumado; toda linha ✗ do Sifter aparece também como limitação declarada na Seção 5.
 
 ---
 
@@ -270,7 +311,7 @@ Conteúdo obrigatório: de onde veio o corpus, como a amostra foi sorteada (1/3 
 
 #### T5.3 Preencher o Data and Code Availability Statement
 **Dono:** filho · **Depende de:** T5.2, T1.1
-**Arquivo:** `paper/sections/06-conclusion.tex`, seção "*Data and Code Availability Statement*"
+**Arquivo:** `sections/06-conclusion.tex`, seção "*Data and Code Availability Statement*"
 Substituir os três placeholders por: URL do código, DOI do dataset, e a frase sobre modelo/versão/data de acesso registrados por decisão.
 
 ---
@@ -279,12 +320,12 @@ Substituir os três placeholders por: URL do código, DOI do dataset, e a frase 
 
 #### T6.1 Preencher autoria e afiliação
 **Dono:** filho · **Depende de:** T0.1
-**Arquivo:** `paper/main.tex`
+**Arquivo:** `main.tex`
 Acrescentar coautores com `\author[1]{}`, ajustar `\authormark`, incluir e-mails e a ordem acordada. Remover os comentários `TODO`.
 
 #### T6.2 Declaração de uso de IA
 **Dono:** filho · **Depende de:** nada
-**Arquivo:** `paper/sections/06-conclusion.tex`, seção "*Use of Artificial Intelligence Tools*"
+**Arquivo:** `sections/06-conclusion.tex`, seção "*Use of Artificial Intelligence Tools*"
 Separar duas coisas que o revisor vai cobrar que estejam separadas: (a) uso de IA para redigir ou revisar o manuscrito, com ferramenta e finalidade; (b) uso de IA como objeto do estudo, que é o Sifter.
 **Verificação:** as duas alíneas existem e nenhuma afirma uso não ocorrido.
 
@@ -300,7 +341,7 @@ Percorrer os cinco blocos do guia (desenho, avaliação, validação, reprodutib
 
 #### T6.5 Fechamento técnico
 **Dono:** filho
-`make` limpo, 0 overfull, `pdftotext | wc -w` entre 4.500 e 7.000 palavras, PDF sem comentário `TODO` residual: `grep -rn "TODO" paper/` → vazio.
+`make` limpo, 0 overfull, `pdftotext | wc -w` entre 4.500 e 7.000 palavras, PDF sem comentário `TODO` residual: `grep -rn "TODO" sections/ main.tex` → vazio.
 
 ---
 
@@ -311,7 +352,7 @@ Percorrer os cinco blocos do guia (desenho, avaliação, validação, reprodutib
 `https://mc.manuscriptcentral.com/researchsynthesis` — criar conta, vincular ORCID.
 
 #### T7.2 Carta de apresentação
-**Dono:** filho · **Arquivo:** `repos/sifter-paper/paper/cover-letter.md`
+**Dono:** filho · **Arquivo:** `repos/sifter-paper/cover-letter.md`
 Conteúdo: tipo de artigo (Software Focus), uma frase de contribuição, uma de adequação ao escopo, declaração de que não há submissão duplicada, conflito de interesse, e pedido explícito de waiver de APC por ausência de financiamento.
 
 #### T7.3 Pedido de waiver
@@ -363,7 +404,7 @@ Caminho crítico: **T2.1 → T2.2 → T2.3 → T2.4**. T2.2 é trabalho humano d
 
 O plano termina quando os oito itens abaixo são verdadeiros ao mesmo tempo:
 
-1. `make` gera `paper/main.pdf` com 0 overfull e sem `TODO`.
+1. `make` gera `main.pdf` com 0 overfull e sem `TODO`.
 2. Tabela 4 tem a linha do E1 novo e existe a tabela de WSS, NNR, sensibilidade e especificidade.
 3. `data/` contém export de auditoria, amostra preenchida, semente e `prompts.md`, sem credencial.
 4. `sifter-ai` tem `LICENSE`, tag `v3.20.0-rsm` e instalação limpa comprovada.
@@ -374,4 +415,4 @@ O plano termina quando os oito itens abaixo são verdadeiros ao mesmo tempo:
 
 ## Conexões
 
-`01-Projects/SifterAI/SifterAI - Mapa de periodicos para o artigo (2026-11-11).md` · `notes/venue-decision.md` · `paper/CHECKLIST-SUBMISSAO.md`
+`01-Projects/SifterAI/SifterAI - Mapa de periodicos para o artigo (2026-11-11).md` · `notes/venue-decision.md` · `CHECKLIST-SUBMISSAO.md`
